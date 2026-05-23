@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   nickname: string | null;
   profile_image: string | null;
+  role: string;
 }
 
 export function useAuth() {
@@ -34,12 +35,17 @@ export function useAuth() {
   useEffect(() => {
     fetchMe();
 
-    // 다른 탭에서 로그인/로그아웃 시 동기화
+    // 같은 탭 로그인 후 갱신
+    window.addEventListener("auth:login", fetchMe);
+    // 다른 탭 동기화
     function onStorage(e: StorageEvent) {
       if (e.key === "access_token") fetchMe();
     }
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("auth:login", fetchMe);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   function logout() {

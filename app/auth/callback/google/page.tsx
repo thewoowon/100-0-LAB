@@ -25,6 +25,7 @@ function GoogleCallbackInner() {
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
         localStorage.setItem("user_id", String(data.user.id));
+        window.dispatchEvent(new Event("auth:login"));
         router.push("/");
       })
       .catch((e) => {

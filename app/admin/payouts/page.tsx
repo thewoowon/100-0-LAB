@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 
 const STATUS_LABELS: Record<string, string> = {
   PAYOUT_PENDING: "지급 대기",
@@ -34,6 +35,7 @@ interface Payout {
 
 export default function AdminPayoutsPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [markTarget, setMarkTarget] = useState<number | null>(null);
@@ -42,10 +44,11 @@ export default function AdminPayoutsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) { router.push("/auth/login"); return; }
+    if (authLoading) return;
+    if (!user) { router.push("/auth/login"); return; }
+    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") { router.push("/"); return; }
     fetchPayouts();
-  }, []);
+  }, [user, authLoading]);
 
   async function fetchPayouts() {
     setLoading(true);
@@ -128,7 +131,7 @@ export default function AdminPayoutsPage() {
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>ref: {p.payment_reference}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
                     className="text-xs px-2 py-0.5"
                     style={{ background: STATUS_COLORS[p.status] ?? "var(--border)", color: "#fff" }}

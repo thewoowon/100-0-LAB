@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING_REVIEW: "검수 대기",
@@ -44,6 +45,7 @@ const DECISION_OPTIONS = [
 
 export default function AdminSubmissionsPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
@@ -54,10 +56,11 @@ export default function AdminSubmissionsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) { router.push("/auth/login"); return; }
+    if (authLoading) return;
+    if (!user) { router.push("/auth/login"); return; }
+    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") { router.push("/"); return; }
     fetchSubmissions();
-  }, [statusFilter]);
+  }, [statusFilter, user, authLoading]);
 
   async function fetchSubmissions() {
     setLoading(true);
