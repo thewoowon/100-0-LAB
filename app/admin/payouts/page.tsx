@@ -55,8 +55,8 @@ export default function AdminPayoutsPage() {
     try {
       const data = await api.get<Payout[]>("/submissions/admin/payouts");
       setPayouts(data);
-    } catch {
-      router.push("/");
+    } catch (e: unknown) {
+      console.error("fetchPayouts error:", e);
     } finally {
       setLoading(false);
     }

@@ -68,8 +68,8 @@ export default function AdminSubmissionsPage() {
       const url = statusFilter ? `/submissions/admin?status=${statusFilter}` : "/submissions/admin";
       const data = await api.get<Submission[]>(url);
       setSubmissions(data);
-    } catch {
-      router.push("/");
+    } catch (e: unknown) {
+      console.error("fetchSubmissions error:", e);
     } finally {
       setLoading(false);
     }
