@@ -82,6 +82,16 @@ export default function Header() {
           + 업로드
         </button>
 
+        {!loading && user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+          <Link
+            href="/admin/submissions"
+            className="px-3 py-1.5 text-xs font-medium"
+            style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)" }}
+          >
+            관리자
+          </Link>
+        )}
+
         {!loading && (
           user ? (
             <div className="flex items-center gap-2">
