@@ -43,6 +43,17 @@ const DECISION_OPTIONS = [
   { value: "RIGHTS_RISK", label: "권리 리스크" },
 ];
 
+const REJECTION_TEMPLATES = [
+  "영상 품질이 낮아 편집이 불가능합니다.",
+  "촬영 각도로 인해 사고 상황이 명확하게 확인되지 않습니다.",
+  "영상 내 사고 장면이 포함되어 있지 않습니다.",
+  "1분을 초과하는 영상입니다.",
+  "동일한 사고 영상이 이미 제출되어 있습니다.",
+  "개인정보(얼굴·번호판 외) 처리가 불가능한 영상입니다.",
+  "뉴스·방송에서 이미 공개된 영상으로 판단됩니다.",
+  "저작권 또는 초상권 침해 우려가 있어 반려합니다.",
+];
+
 export default function AdminSubmissionsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -184,12 +195,24 @@ export default function AdminSubmissionsPage() {
                     {DECISION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                   </select>
                   {decision === "REJECT" && (
-                    <input
-                      style={{ ...inputStyle, width: "100%" }}
-                      placeholder="반려 사유"
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                    />
+                    <>
+                      <select
+                        style={{ ...inputStyle, width: "100%", cursor: "pointer" }}
+                        value=""
+                        onChange={(e) => { if (e.target.value) setRejectionReason(e.target.value); }}
+                      >
+                        <option value="">템플릿 선택 (선택 시 자동 입력)</option>
+                        {REJECTION_TEMPLATES.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <input
+                        style={{ ...inputStyle, width: "100%" }}
+                        placeholder="반려 사유 (직접 입력 또는 위 템플릿 선택)"
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                      />
+                    </>
                   )}
                   <textarea
                     style={{ ...inputStyle, width: "100%", resize: "vertical", minHeight: 60 }}

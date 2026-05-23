@@ -96,6 +96,13 @@ export default function Header() {
           user ? (
             <div className="flex items-center gap-2">
               <Link
+                href="/my/submissions"
+                className="text-xs px-2 py-1"
+                style={{ color: "rgba(255,255,255,0.55)" }}
+              >
+                내 제보
+              </Link>
+              <Link
                 href="/user/me"
                 className="flex items-center gap-2 px-2 py-1 rounded-full transition-colors"
                 style={{ color: "var(--card)" }}

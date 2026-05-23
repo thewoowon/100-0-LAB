@@ -46,6 +46,7 @@ export default function UploadPage() {
     reward_policy_confirmed: false,
   });
   const [allChecked, setAllChecked] = useState(false);
+  const [durationError, setDurationError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<{ submissionNo: string } | null>(null);
@@ -55,6 +56,23 @@ export default function UploadPage() {
       router.push("/auth/login");
     }
   }, [router]);
+
+  function handleFileChange(selected: File | null) {
+    setFile(selected);
+    setDurationError(null);
+    if (!selected) return;
+    const url = URL.createObjectURL(selected);
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      if (video.duration > 60) {
+        setDurationError(`영상 길이가 ${Math.round(video.duration)}초입니다. 1분 이하 영상만 제출할 수 있습니다.`);
+        setFile(null);
+      }
+    };
+    video.src = url;
+  }
 
   function toggleAll() {
     const next = !allChecked;
@@ -71,7 +89,7 @@ export default function UploadPage() {
   const allAgreed = Object.values(agreements).every(Boolean);
   const canSubmit = file && description.trim() && incidentType && regionSido && bankName && accountNumber && accountHolder && allAgreed;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!canSubmit) return;
 
@@ -175,8 +193,9 @@ export default function UploadPage() {
             type="file"
             accept=".mp4,.mov,video/mp4,video/quicktime,video/webm"
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
           />
+          {durationError && <p className="text-sm mt-1" style={{ color: "#ff4444" }}>{durationError}</p>}
         </section>
 
         {/* 영상 정보 */}
