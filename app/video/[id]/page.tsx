@@ -392,10 +392,10 @@ export default function VideoPage() {
             <video
               controls
               className="w-full h-full"
-              src={`${API_BASE}/${video.video_url}`}
+              src={video.video_url.startsWith("http") ? video.video_url : `${API_BASE}/${video.video_url}`}
               poster={
                 video.thumbnail_url
-                  ? `${API_BASE}/${video.thumbnail_url}`
+                  ? (video.thumbnail_url.startsWith("http") ? video.thumbnail_url : `${API_BASE}/${video.thumbnail_url}`)
                   : undefined
               }
             />

@@ -152,6 +152,7 @@ interface SearchResult {
 }
 
 const ONBOARDING_KEY = "100lab_onboarded";
+const SPLASH_KEY = "100lab_splash_seen";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -173,7 +174,15 @@ export default function HomePage() {
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // 이미 본 적 있으면 마운트 직후 스플래시 스킵
+  useEffect(() => {
+    if (localStorage.getItem(SPLASH_KEY)) {
+      setShowSplash(false);
+    }
+  }, []);
+
   const handleSplashDone = useCallback(() => {
+    localStorage.setItem(SPLASH_KEY, "1");
     setShowSplash(false);
     if (!localStorage.getItem(ONBOARDING_KEY)) {
       setShowOnboarding(true);
