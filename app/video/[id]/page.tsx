@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -121,6 +122,7 @@ export default function VideoPage() {
   const { id } = useParams<{ id: string }>();
 
   const [video, setVideo] = useState<VideoDetail | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [myVote, setMyVote] = useState<MyVote | null>(null);
   const [tags, setTags] = useState<TagListResponse | null>(null);
@@ -216,7 +218,7 @@ export default function VideoPage() {
   }, [id, loggedIn]);
 
   async function handleVote(ratio: string) {
-    if (!loggedIn) return alert("로그인이 필요합니다.");
+    if (!loggedIn) return setShowLoginModal(true);
     setVoting(true);
     try {
       await api.post(`/videos/${id}/votes`, { ratio });
@@ -281,7 +283,7 @@ export default function VideoPage() {
 
   async function handleSubmitComment() {
     if (!commentText.trim()) return;
-    if (!loggedIn) return alert("로그인이 필요합니다.");
+    if (!loggedIn) return setShowLoginModal(true);
     setSubmittingComment(true);
     try {
       await api.post<CommentItem>(`/videos/${id}/comments`, {
@@ -361,6 +363,7 @@ export default function VideoPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
       {/* 2컬럼: 랩탑은 좌우, 태블릿 이하는 상하 */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* ── 왼쪽: 영상 + 기본 정보 ──────────────────────────────── */}
