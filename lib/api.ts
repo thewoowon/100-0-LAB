@@ -18,7 +18,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Unknown error" }));
-    throw new Error(err.detail ?? res.statusText);
+    const error = new Error(err.detail ?? res.statusText) as Error & { status: number };
+    error.status = res.status;
+    throw error;
   }
   return res.json();
 }

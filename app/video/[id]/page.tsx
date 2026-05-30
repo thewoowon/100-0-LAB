@@ -229,7 +229,8 @@ export default function VideoPage() {
       setVoteResult(result);
       setMyVote(mine);
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "투표 실패");
+      if ((e as { status?: number })?.status === 401) setShowLoginModal(true);
+      else alert(e instanceof Error ? e.message : "투표 실패");
     } finally {
       setVoting(false);
     }
@@ -299,7 +300,8 @@ export default function VideoPage() {
       setIsParty(false);
       setPartyRole("");
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "댓글 작성 실패");
+      if ((e as { status?: number })?.status === 401) setShowLoginModal(true);
+      else alert(e instanceof Error ? e.message : "댓글 작성 실패");
     } finally {
       setSubmittingComment(false);
     }
