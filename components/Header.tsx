@@ -48,7 +48,7 @@ export default function Header() {
             gap: "8px",
           }}
         >
-          <LogoIcon width={32} />
+          <LogoIcon width={32} height={33}/>
           100:0 LAB
         </Link>
 

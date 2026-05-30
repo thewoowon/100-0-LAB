@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import { api } from "@/lib/api";
 
@@ -61,8 +61,9 @@ interface AdminSubmission {
   created_at: string;
 }
 
-export default function AdminSubmissionDetailPage({ params }: { params: { id: string } }) {
+export default function AdminSubmissionDetailPage() {
   const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
   const userRole = user?.role;
 
@@ -89,7 +90,6 @@ export default function AdminSubmissionDetailPage({ params }: { params: { id: st
     if (authLoading || !userRole) return;
     if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") return;
 
-    const id = params.id;
     let active = true;
 
     Promise.all([
@@ -103,7 +103,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: { id: st
       .finally(() => { if (active) setLoading(false); });
 
     return () => { active = false; };
-  }, [params.id, userRole, authLoading]);
+  }, [id, userRole, authLoading]);
 
   async function handleReview() {
     if (!submission) return;
