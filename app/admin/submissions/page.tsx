@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
@@ -66,17 +66,12 @@ export default function AdminSubmissionsPage() {
   const [memo, setMemo] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) { router.push("/auth/login"); return; }
-    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") { router.push("/"); return; }
-    fetchSubmissions();
-  }, [statusFilter, user, authLoading]);
-
-  async function fetchSubmissions() {
+  const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
-      const url = statusFilter ? `/submissions/admin?status=${statusFilter}` : "/submissions/admin";
+      const url = statusFilter
+        ? `/submissions/admin?status=${statusFilter}`
+        : "/submissions/admin";
       const data = await api.get<Submission[]>(url);
       setSubmissions(data);
     } catch (e: unknown) {
@@ -84,7 +79,18 @@ export default function AdminSubmissionsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
+
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.push("/auth/login"); return; }
+    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") { router.push("/"); return; }
+    fetchSubmissions();
+    // user?.role 사용: 객체 참조 변경 시 불필요한 재실행 방지
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, user?.role, authLoading]);
 
   async function handleReview(submissionId: number) {
     setSubmitting(true);
@@ -100,7 +106,7 @@ export default function AdminSubmissionsPage() {
       setMemo("");
       fetchSubmissions();
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "오류");
+      setReviewError(e instanceof Error ? e.message : "오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -118,11 +124,16 @@ export default function AdminSubmissionsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold" style={{ color: "var(--text)" }}>제출 관리</h1>
+        <h1 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+          제출 관리
+        </h1>
         <button
           onClick={() => router.push("/admin/payouts")}
           className="text-sm px-3 py-1.5"
-          style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
+          style={{
+            border: "1px solid var(--border)",
+            color: "var(--text-muted)",
+          }}
         >
           지급 관리 →
         </button>
@@ -146,24 +157,42 @@ export default function AdminSubmissionsPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>불러오는 중...</p>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          불러오는 중...
+        </p>
       ) : submissions.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>제출 내역이 없습니다.</p>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          제출 내역이 없습니다.
+        </p>
       ) : (
         <div className="flex flex-col gap-3">
           {submissions.map((s) => (
             <div
               key={s.id}
               className="p-4"
-              style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+              }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{s.submission_no}</p>
-                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  <p
+                    className="text-xs mb-1"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {s.submission_no}
+                  </p>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--text)" }}
+                  >
                     {s.title || s.incident_type} · {s.region_sido}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {new Date(s.created_at).toLocaleString("ko-KR")}
                   </p>
                 </div>
@@ -179,9 +208,12 @@ export default function AdminSubmissionsPage() {
                   </span>
                   {["PENDING_REVIEW", "NEEDS_MORE_INFO"].includes(s.status) && (
                     <button
-                      onClick={() => setReviewTarget(s.id)}
+                      onClick={() => { setReviewTarget(s.id); setReviewError(null); }}
                       className="text-xs px-2 py-1"
-                      style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+                      style={{
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
+                      }}
                     >
                       검수
                     </button>
@@ -190,20 +222,42 @@ export default function AdminSubmissionsPage() {
               </div>
 
               {reviewTarget === s.id && (
-                <div className="mt-4 flex flex-col gap-3 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-                  <select style={{ ...inputStyle, width: "100%" }} value={decision} onChange={(e) => setDecision(e.target.value)}>
-                    {DECISION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                <div
+                  className="mt-4 flex flex-col gap-3 pt-4"
+                  style={{ borderTop: "1px solid var(--border)" }}
+                >
+                  <select
+                    style={{ ...inputStyle, width: "100%" }}
+                    value={decision}
+                    onChange={(e) => setDecision(e.target.value)}
+                  >
+                    {DECISION_OPTIONS.map((d) => (
+                      <option key={d.value} value={d.value}>
+                        {d.label}
+                      </option>
+                    ))}
                   </select>
                   {decision === "REJECT" && (
                     <>
                       <select
-                        style={{ ...inputStyle, width: "100%", cursor: "pointer" }}
+                        style={{
+                          ...inputStyle,
+                          width: "100%",
+                          cursor: "pointer",
+                        }}
                         value=""
-                        onChange={(e) => { if (e.target.value) setRejectionReason(e.target.value); }}
+                        onChange={(e) => {
+                          if (e.target.value)
+                            setRejectionReason(e.target.value);
+                        }}
                       >
-                        <option value="">템플릿 선택 (선택 시 자동 입력)</option>
+                        <option value="">
+                          템플릿 선택 (선택 시 자동 입력)
+                        </option>
                         {REJECTION_TEMPLATES.map((t) => (
-                          <option key={t} value={t}>{t}</option>
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
                         ))}
                       </select>
                       <input
@@ -215,11 +269,19 @@ export default function AdminSubmissionsPage() {
                     </>
                   )}
                   <textarea
-                    style={{ ...inputStyle, width: "100%", resize: "vertical", minHeight: 60 }}
+                    style={{
+                      ...inputStyle,
+                      width: "100%",
+                      resize: "vertical",
+                      minHeight: 60,
+                    }}
                     placeholder="내부 메모 (선택)"
                     value={memo}
                     onChange={(e) => setMemo(e.target.value)}
                   />
+                  {reviewError && (
+                    <p className="text-xs" style={{ color: "#ef4444" }}>{reviewError}</p>
+                  )}
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleReview(s.id)}
@@ -232,7 +294,10 @@ export default function AdminSubmissionsPage() {
                     <button
                       onClick={() => setReviewTarget(null)}
                       className="text-sm px-4 py-1.5"
-                      style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}
+                      style={{
+                        border: "1px solid var(--border)",
+                        color: "var(--text-muted)",
+                      }}
                     >
                       취소
                     </button>

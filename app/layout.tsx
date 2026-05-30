@@ -51,6 +51,11 @@ export default function RootLayout({
         />
         <Header />
         <main>{children}</main>
+        <footer className="max-w-6xl mx-auto px-4 py-8 mt-16 flex gap-4 flex-wrap" style={{ borderTop: "1px solid var(--border)" }}>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>© 2025 100:0 연구소</span>
+          <a href="/policy/terms" className="text-xs" style={{ color: "var(--text-muted)" }}>이용약관</a>
+          <a href="/policy/privacy" className="text-xs" style={{ color: "var(--text-muted)" }}>개인정보처리방침</a>
+        </footer>
       </body>
     </html>
   );
