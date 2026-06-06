@@ -403,7 +403,7 @@ export default function HomePage() {
                 </p>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
                   블랙박스 영상을 제보해주세요.<br />
-                  운영팀 검수 후 채택 시 건당 <span style={{ color: "var(--text)", fontWeight: 600 }}>5,000원</span>이 지급됩니다.
+                  운영팀 검수 후 채택 시 건당 <span style={{ color: "var(--text)", fontWeight: 600 }}>30,000원</span>이 지급됩니다.
                 </p>
               </div>
               <Link

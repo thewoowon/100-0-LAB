@@ -62,7 +62,7 @@ const AGREEMENTS = [
   },
   {
     key: "reward_policy_confirmed",
-    label: "[필수] 검수 후 채택된 영상에 한해 건당 5,000원이 지급됨을 확인합니다.",
+    label: "[필수] 검수 후 채택된 영상에 한해 건당 30,000원이 지급됨을 확인합니다.",
   },
 ];
 
@@ -277,7 +277,7 @@ export default function UploadPage() {
         <p className="text-sm mb-8" style={{ color: "var(--text-muted)" }}>
           운영팀 검수 후 채택 여부가 결정됩니다.
           <br />
-          채택된 영상은 입력하신 계좌로 건당 5,000원이 지급됩니다.
+          채택된 영상은 입력하신 계좌로 건당 30,000원이 지급됩니다.
         </p>
         <button
           onClick={() => router.push("/")}
@@ -301,7 +301,7 @@ export default function UploadPage() {
         }}
       >
         블랙박스 영상을 제보해주세요. 운영팀 검수 후 채택 시 영상 1건당{" "}
-        <span style={{ color: "var(--text)", fontWeight: 600 }}>5,000원</span>을
+        <span style={{ color: "var(--text)", fontWeight: 600 }}>30,000원</span>을
         지급합니다.
         <br />
         업로드 즉시 지급되는 것이 아니며, 검수 후 채택된 영상만 지급됩니다.

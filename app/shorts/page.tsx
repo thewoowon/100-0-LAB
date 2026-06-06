@@ -380,7 +380,7 @@ export default function ShortsPage() {
             첫 번째 제보하기 →
           </Link>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-            채택 시 건당 5,000원 지급
+            채택 시 건당 30,000원 지급
           </p>
         </div>
       )}
