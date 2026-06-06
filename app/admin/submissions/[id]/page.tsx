@@ -55,6 +55,7 @@ interface AdminSubmission {
   title: string | null;
   description: string;
   user_id: number;
+  user_email: string | null;
   rejection_reason: string | null;
   review_memo: string | null;
   video_id: number | null;
@@ -194,6 +195,7 @@ export default function AdminSubmissionDetailPage() {
 
       {/* 제출 정보 */}
       <div className="mb-6 p-4 flex flex-col gap-2.5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+        <InfoRow label="제출자 이메일" value={submission.user_email ?? "-"} />
         <InfoRow label="사고 유형" value={submission.incident_type} />
         <InfoRow label="지역" value={location || "-"} />
         {submission.title && <InfoRow label="제목" value={submission.title} />}
