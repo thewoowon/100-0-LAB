@@ -35,6 +35,9 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: "100:0 LAB — 블랙박스 영상 플랫폼",
   description: "블랙박스 영상만을 다루는 영상 플랫폼",
+  other: {
+    "naver-site-verification": "f04309a5356e6d3a641a82b994b88c2f81b7c82d",
+  },
 };
 
 export default function RootLayout({
