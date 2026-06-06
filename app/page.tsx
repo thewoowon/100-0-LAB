@@ -390,9 +390,40 @@ export default function HomePage() {
           </div>
 
           {videos.length === 0 && !loading && (
-            <div className="text-center py-24" style={{ color: "var(--text-muted)" }}>
-              <p className="text-lg mb-2">아직 업로드된 영상이 없습니다</p>
-              <Link href="/upload" className="text-sm underline" style={{ color: "var(--text-muted)" }}>첫 번째 영상을 업로드하세요</Link>
+            <div className="py-20 flex flex-col items-center text-center gap-6">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
+                style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+              >
+                📹
+              </div>
+              <div>
+                <p className="text-base font-semibold mb-2" style={{ color: "var(--text)" }}>
+                  현재 첫 번째 제보를 기다리고 있습니다
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  블랙박스 영상을 제보해주세요.<br />
+                  운영팀 검수 후 채택 시 건당 <span style={{ color: "var(--text)", fontWeight: 600 }}>5,000원</span>이 지급됩니다.
+                </p>
+              </div>
+              <Link
+                href="/upload"
+                className="px-5 py-2.5 text-sm font-medium"
+                style={{ background: "var(--text)", color: "var(--bg)" }}
+              >
+                제보하기 →
+              </Link>
+              <div
+                className="mt-2 px-5 py-4 rounded-xl max-w-sm w-full text-left"
+                style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+              >
+                <p className="text-xs font-semibold mb-1" style={{ color: "var(--text)" }}>
+                  AI 자연어 검색
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  영상이 쌓이면 위 검색창에서 &ldquo;흰색 차가 신호등 들이받는 영상&rdquo;처럼 상황을 설명하면 AI가 관련 영상을 찾아드립니다.
+                </p>
+              </div>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

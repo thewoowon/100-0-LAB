@@ -4,6 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    daum: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    kakao: any;
+  }
+}
+
+const SIDO_MAP: Record<string, string> = {
+  "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구",
+  "인천광역시": "인천", "광주광역시": "광주", "대전광역시": "대전",
+  "울산광역시": "울산", "세종특별자치시": "세종", "경기도": "경기",
+  "강원도": "강원", "강원특별자치도": "강원", "충청북도": "충북",
+  "충청남도": "충남", "전라북도": "전북", "전북특별자치도": "전북",
+  "전라남도": "전남", "경상북도": "경북", "경상남도": "경남",
+  "제주특별자치도": "제주",
+};
+
 const INCIDENT_TYPES = [
   "사고",
   "아찔한 상황",
@@ -13,25 +32,6 @@ const INCIDENT_TYPES = [
   "기타",
 ];
 
-const SIDO_LIST = [
-  "서울",
-  "부산",
-  "대구",
-  "인천",
-  "광주",
-  "대전",
-  "울산",
-  "세종",
-  "경기",
-  "강원",
-  "충북",
-  "충남",
-  "전북",
-  "전남",
-  "경북",
-  "경남",
-  "제주",
-];
 
 const AGREEMENTS = [
   {
@@ -98,6 +98,8 @@ export default function UploadPage() {
     privacy_policy_agreed: false,
     reward_policy_confirmed: false,
   });
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [allChecked, setAllChecked] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -111,6 +113,48 @@ export default function UploadPage() {
       router.push("/auth/login");
     }
   }, [router]);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.async = true;
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, []);
+
+  function openAddressSearch() {
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({
+      oncomplete(data: Record<string, string>) {
+        const sido = SIDO_MAP[data.sido] ?? data.sido;
+        const sigungu = data.sigungu ?? "";
+        const fullAddress = data.roadAddress || data.address;
+        setRegionSido(sido);
+        setRegionSigungu(sigungu);
+        setApproximateAddress(fullAddress);
+        setLat(null);
+        setLng(null);
+
+        const geocode = () => {
+          const kakao = window.kakao;
+          if (!kakao?.maps?.services) return;
+          const geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(fullAddress, (result: Array<{x: string; y: string}>, status: string) => {
+            if (status === kakao.maps.services.Status.OK && result[0]) {
+              setLng(parseFloat(result[0].x));
+              setLat(parseFloat(result[0].y));
+            }
+          });
+        };
+
+        if (window.kakao?.maps?.services) {
+          geocode();
+        } else if (window.kakao?.maps) {
+          window.kakao.maps.load(geocode);
+        }
+      },
+    }).open();
+  }
 
   function handleFileChange(selected: File | null) {
     setFile(selected);
@@ -175,6 +219,8 @@ export default function UploadPage() {
     if (regionSigungu) form.append("region_sigungu", regionSigungu);
     if (approximateAddress)
       form.append("approximate_address", approximateAddress);
+    if (lat !== null) form.append("original_lat", String(lat));
+    if (lng !== null) form.append("original_lng", String(lng));
     form.append("bank_name", bankName);
     form.append("account_number", accountNumber);
     form.append("account_holder", accountHolder);
@@ -344,33 +390,39 @@ export default function UploadPage() {
             className="text-xs font-medium"
             style={{ color: "var(--text-muted)" }}
           >
-            위치 정보
+            위치 정보 *
           </p>
-          <select
-            style={selectStyle}
-            value={regionSido}
-            onChange={(e) => setRegionSido(e.target.value)}
-            required
+          <button
+            type="button"
+            onClick={openAddressSearch}
+            style={{ ...inputStyle, textAlign: "left", cursor: "pointer" }}
           >
-            <option value="">시/도 선택 *</option>
-            {SIDO_LIST.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <input
-            style={inputStyle}
-            placeholder="시/군/구 (선택)"
-            value={regionSigungu}
-            onChange={(e) => setRegionSigungu(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            placeholder="대략적인 주소 (선택)"
-            value={approximateAddress}
-            onChange={(e) => setApproximateAddress(e.target.value)}
-          />
+            {approximateAddress || (
+              <span style={{ color: "var(--text-muted)" }}>주소 검색 (클릭)</span>
+            )}
+          </button>
+          {approximateAddress && (
+            <div className="flex gap-2">
+              <input
+                style={{ ...inputStyle, flex: 1 }}
+                placeholder="시/도"
+                value={regionSido}
+                onChange={(e) => setRegionSido(e.target.value)}
+                required
+              />
+              <input
+                style={{ ...inputStyle, flex: 1 }}
+                placeholder="시/군/구"
+                value={regionSigungu}
+                onChange={(e) => setRegionSigungu(e.target.value)}
+              />
+            </div>
+          )}
+          {lat && lng && (
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              좌표 확인 완료 ({lat.toFixed(4)}, {lng.toFixed(4)})
+            </p>
+          )}
         </section>
 
         {/* 지급 계좌 */}

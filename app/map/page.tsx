@@ -93,6 +93,7 @@ export default function MapPage() {
             zoom={7}
             center={[36.5, 127.8]}
             height="100%"
+            gpsEnabled
             onPinClick={(pin) => {
               setSelected(pin);
             }}
@@ -116,11 +117,12 @@ export default function MapPage() {
               ✕
             </button>
             {selected.thumbnail_url && (
-              <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-neutral-100">
+              <div className="aspect-video relative rounded-lg overflow-hidden mb-3 bg-neutral-100">
                 <Image
-                  src={`${API_BASE}/${selected.thumbnail_url}`}
+                  src={selected.thumbnail_url.startsWith("http") ? selected.thumbnail_url : `${API_BASE}/${selected.thumbnail_url}`}
                   alt={selected.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )}

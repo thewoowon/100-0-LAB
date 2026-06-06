@@ -19,6 +19,7 @@ interface AccidentMapProps {
   height?: string;
   onPinClick?: (pin: MapPin) => void;
   singlePin?: boolean;
+  gpsEnabled?: boolean;
 }
 
 declare global {
@@ -34,6 +35,10 @@ function formatViews(v: number) {
   return String(v);
 }
 
+const MARKER_SVG = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="5" fill="#0a0a0a" stroke="white" stroke-width="2.5"/></svg>'
+)}`;
+
 export default function AccidentMap({
   pins,
   center,
@@ -41,10 +46,25 @@ export default function AccidentMap({
   height = "100%",
   onPinClick,
   singlePin = false,
+  gpsEnabled = false,
 }: AccidentMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<unknown>(null);
-  const overlaysRef = useRef<unknown[]>([]);
+  const markersRef = useRef<unknown[]>([]);
+
+  function gotoUserLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const kakao = window.kakao;
+        if (!mapInstanceRef.current || !kakao?.maps) return;
+        const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        (mapInstanceRef.current as { setCenter: (l: unknown) => void; setLevel: (l: number) => void }).setCenter(latlng);
+        (mapInstanceRef.current as { setCenter: (l: unknown) => void; setLevel: (l: number) => void }).setLevel(5);
+      },
+      () => {}
+    );
+  }
 
   useEffect(() => {
     if (!mapRef.current || pins.length === 0) return;
@@ -57,12 +77,13 @@ export default function AccidentMap({
       const kakao = window.kakao;
       if (!kakao?.maps) return;
 
-      // 이미 지도가 있으면 제거
+      // 기존 마커 제거
+      markersRef.current.forEach((m: unknown) => {
+        (m as { setMap: (map: null) => void }).setMap(null);
+      });
+      markersRef.current = [];
+
       if (mapInstanceRef.current) {
-        overlaysRef.current.forEach((o: unknown) => {
-          (o as { setMap: (m: null) => void }).setMap(null);
-        });
-        overlaysRef.current = [];
         mapInstanceRef.current = null;
         mapRef.current!.innerHTML = "";
       }
@@ -73,42 +94,40 @@ export default function AccidentMap({
         ? new kakao.maps.LatLng(pins[0].lat, pins[0].lng)
         : new kakao.maps.LatLng(36.5, 127.8);
 
-      const kakaoZoom = pins.length === 1 ? 4 : zoom; // 카카오 zoom: 1(가장 가까움)~14(가장 멀리)
+      const level = pins.length === 1 ? 4 : zoom;
 
       const map = new kakao.maps.Map(mapRef.current, {
         center: defaultCenter,
-        level: kakaoZoom,
+        level,
         draggable: true,
         scrollwheel: !singlePin,
       });
 
       mapInstanceRef.current = map;
 
+      // 위치 권한 요청 후 지도 중심 이동
+      if (gpsEnabled && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (cancelled) return;
+            map.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+            map.setLevel(7);
+          },
+          () => {}
+        );
+      }
+
+      const markerImage = new kakao.maps.MarkerImage(
+        MARKER_SVG,
+        new kakao.maps.Size(16, 16),
+        { offset: new kakao.maps.Point(8, 8) }
+      );
+
       pins.forEach((pin) => {
         const position = new kakao.maps.LatLng(pin.lat, pin.lng);
+        const marker = new kakao.maps.Marker({ position, image: markerImage, map });
+        markersRef.current.push(marker);
 
-        // 커스텀 오버레이 (검정 원 마커)
-        const markerEl = document.createElement("div");
-        markerEl.style.cssText = `
-          width:14px;height:14px;
-          background:#0a0a0a;
-          border:2px solid #fff;
-          border-radius:50%;
-          box-shadow:0 1px 6px rgba(0,0,0,0.4);
-          cursor:pointer;
-        `;
-
-        const overlay = new kakao.maps.CustomOverlay({
-          position,
-          content: markerEl,
-          yAnchor: 0.5,
-          xAnchor: 0.5,
-          zIndex: 3,
-        });
-        overlay.setMap(map);
-        overlaysRef.current.push(overlay);
-
-        // 인포윈도우 (팝업)
         if (!singlePin) {
           const infoContent = `
             <div style="padding:12px 14px;min-width:170px;font-family:sans-serif;border-radius:10px;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
@@ -118,27 +137,17 @@ export default function AccidentMap({
               <a href="/video/${pin.id}" style="font-size:11px;color:#0a0a0a;font-weight:600;text-decoration:underline;">영상 보기 →</a>
             </div>
           `;
-
-          const infowindow = new kakao.maps.InfoWindow({
-            content: infoContent,
-            removable: true,
-            zIndex: 10,
-          });
-
-          markerEl.addEventListener("click", () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            infowindow.open(map, { getPosition: () => position } as any);
+          const infowindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true, zIndex: 10 });
+          kakao.maps.event.addListener(marker, "click", () => {
+            infowindow.open(map, marker);
             onPinClick?.(pin);
           });
-
-          overlaysRef.current.push(infowindow);
         } else {
-          markerEl.addEventListener("click", () => onPinClick?.(pin));
+          kakao.maps.event.addListener(marker, "click", () => onPinClick?.(pin));
         }
       });
     }
 
-    // SDK가 이미 로드됐으면 바로, 아니면 load 후 실행
     if (window.kakao?.maps) {
       window.kakao.maps.load(init);
     } else {
@@ -157,7 +166,7 @@ export default function AccidentMap({
     return () => {
       cancelled = true;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pins]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (pins.length === 0) {
     return (
@@ -171,9 +180,36 @@ export default function AccidentMap({
   }
 
   return (
-    <div
-      ref={mapRef}
-      style={{ height, width: "100%", borderRadius: "8px", overflow: "hidden" }}
-    />
+    <div style={{ height, width: "100%", position: "relative" }}>
+      <div
+        ref={mapRef}
+        style={{ height: "100%", width: "100%", borderRadius: "8px", overflow: "hidden" }}
+      />
+      {gpsEnabled && (
+        <button
+          onClick={gotoUserLocation}
+          title="내 위치로"
+          style={{
+            position: "absolute",
+            bottom: "12px",
+            right: "12px",
+            zIndex: 10,
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: "#fff",
+            border: "1px solid #e5e5e5",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "16px",
+          }}
+        >
+          ◎
+        </button>
+      )}
+    </div>
   );
 }
