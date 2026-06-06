@@ -344,10 +344,44 @@ export default function ShortsPage() {
         </div>
       )}
 
-      {/* 스와이프 힌트 (첫 진입시) */}
-      {items.length === 0 && (
+      {/* 초기 로딩 */}
+      {items.length === 0 && (loadingMore || hasMore) && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* 빈 상태 */}
+      {items.length === 0 && !loadingMore && !hasMore && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-8 text-center">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m15 10 4.553-2.069A1 1 0 0 1 21 8.87v6.26a1 1 0 0 1-1.447.894L15 14"/>
+              <rect x="2" y="6" width="13" height="12" rx="2"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-white font-semibold text-lg mb-2">
+              아직 쇼츠 영상이 없습니다
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+              블랙박스 영상을 제보하면<br />
+              여기서 쇼츠로 즐길 수 있어요
+            </p>
+          </div>
+          <Link
+            href="/upload"
+            className="px-6 py-2.5 text-sm font-medium rounded-full"
+            style={{ background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+          >
+            첫 번째 제보하기 →
+          </Link>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            채택 시 건당 5,000원 지급
+          </p>
         </div>
       )}
 

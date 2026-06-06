@@ -87,6 +87,34 @@ export default function MapPage() {
               }}
             />
           </div>
+        ) : pins.length === 0 ? (
+          <div
+            className="w-full h-full flex flex-col items-center justify-center gap-5 text-center px-8"
+            style={{ background: "var(--card)" }}
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+            >
+              🗺️
+            </div>
+            <div>
+              <p className="text-sm font-semibold mb-1.5" style={{ color: "var(--text)" }}>
+                아직 지도에 표시된 사고가 없습니다
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                블랙박스 영상과 함께 촬영 위치를 제보하면<br />
+                이 지도에 사고 위치가 표시됩니다
+              </p>
+            </div>
+            <Link
+              href="/upload"
+              className="px-5 py-2 text-xs font-medium"
+              style={{ background: "var(--text)", color: "var(--bg)" }}
+            >
+              제보하기 →
+            </Link>
+          </div>
         ) : (
           <AccidentMap
             pins={pins}
@@ -194,47 +222,65 @@ export default function MapPage() {
           </p>
         </div>
 
-        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-          {pins.map((pin) => (
-            <button
-              key={pin.id}
-              onClick={() => setSelected(selected?.id === pin.id ? null : pin)}
-              className="w-full text-left px-4 py-3 transition-colors cursor-pointer"
-              style={{
-                background:
-                  selected?.id === pin.id ? "var(--card)" : "transparent",
-              }}
+        {!loading && locations.length === 0 ? (
+          <div className="flex flex-col items-center text-center gap-4 px-6 py-12">
+            <p className="text-xs font-medium" style={{ color: "var(--text)" }}>
+              제보된 영상이 없습니다
+            </p>
+            <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              블랙박스 영상을 제보하면<br />촬영 위치가 여기 나타납니다
+            </p>
+            <Link
+              href="/upload"
+              className="text-[11px] underline"
+              style={{ color: "var(--text-muted)" }}
             >
-              <p
-                className="text-xs font-medium line-clamp-2 mb-0.5"
-                style={{ color: "var(--text)" }}
+              제보하기 →
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+            {pins.map((pin) => (
+              <button
+                key={pin.id}
+                onClick={() => setSelected(selected?.id === pin.id ? null : pin)}
+                className="w-full text-left px-4 py-3 transition-colors cursor-pointer"
+                style={{
+                  background:
+                    selected?.id === pin.id ? "var(--card)" : "transparent",
+                }}
               >
-                {pin.title}
-              </p>
-              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                {pin.filmed_location}
-              </p>
-            </button>
-          ))}
-
-          {noLocation.length > 0 && (
-            <div className="px-4 py-3">
-              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                위치 미확인 {noLocation.length}건
-              </p>
-              {noLocation.map((v) => (
-                <Link
-                  key={v.id}
-                  href={`/video/${v.id}`}
-                  className="block text-[11px] py-1 hover:underline truncate"
-                  style={{ color: "var(--text-muted)" }}
+                <p
+                  className="text-xs font-medium line-clamp-2 mb-0.5"
+                  style={{ color: "var(--text)" }}
                 >
-                  {v.title}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+                  {pin.title}
+                </p>
+                <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  {pin.filmed_location}
+                </p>
+              </button>
+            ))}
+
+            {noLocation.length > 0 && (
+              <div className="px-4 py-3">
+                <p className="text-[11px] mb-1" style={{ color: "var(--text-muted)" }}>
+                  위치 미확인 {noLocation.length}건
+                </p>
+                {noLocation.map((v) => (
+                  <Link
+                    key={v.id}
+                    href={`/video/${v.id}`}
+                    className="block text-[11px] py-1 hover:underline truncate"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {v.title}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
