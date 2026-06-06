@@ -2,14 +2,24 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import LogoIcon from "./icons/LogoIcon";
 import { useAuth } from "@/lib/useAuth";
+import { useRecentPayouts, timeAgo } from "@/lib/useRecentPayouts";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
+  const recentPayouts = useRecentPayouts();
+  const [tickerIdx, setTickerIdx] = useState(0);
+
+  useEffect(() => {
+    if (recentPayouts.length < 2) return;
+    const t = setInterval(() => setTickerIdx((i) => (i + 1) % recentPayouts.length), 3500);
+    return () => clearInterval(t);
+  }, [recentPayouts.length]);
 
   if (pathname.startsWith("/shorts")) return null;
 
@@ -152,6 +162,19 @@ export default function Header() {
           )
         )}
       </div>
+
+      {recentPayouts.length > 0 && (
+        <div
+          className="flex items-center justify-center gap-2 py-1 text-xs overflow-hidden"
+          style={{ background: "#111", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <span style={{ color: "#10b981" }}>✓</span>
+          <span style={{ color: "rgba(255,255,255,0.7)" }}>
+            {recentPayouts[tickerIdx].region} · {recentPayouts[tickerIdx].amount.toLocaleString()}원 지급 완료
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.3)" }}>{timeAgo(recentPayouts[tickerIdx].paid_at)}</span>
+        </div>
+      )}
     </header>
   );
 }

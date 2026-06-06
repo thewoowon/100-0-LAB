@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRecentPayouts, timeAgo } from "@/lib/useRecentPayouts";
 
 declare global {
   interface Window {
@@ -100,6 +101,7 @@ export default function UploadPage() {
   });
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const recentPayouts = useRecentPayouts();
   const [allChecked, setAllChecked] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -516,6 +518,21 @@ export default function UploadPage() {
             </div>
           </div>
         </section>
+
+        {recentPayouts.length > 0 && (
+          <div className="flex flex-col gap-1.5 py-3 px-4 rounded-lg" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <p className="text-[11px] font-medium mb-0.5" style={{ color: "var(--text-muted)" }}>최근 지급 완료</p>
+            {recentPayouts.slice(0, 4).map((p, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-xs">
+                <span style={{ color: "#10b981" }}>✓</span>
+                <span style={{ color: "var(--text)" }}>{p.region}</span>
+                <span style={{ color: "var(--text-muted)" }}>·</span>
+                <span style={{ color: "var(--text)", fontWeight: 600 }}>{p.amount.toLocaleString()}원</span>
+                <span style={{ color: "var(--text-muted)" }}>{timeAgo(p.paid_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {error && (
           <p className="text-sm" style={{ color: "#ff4444" }}>

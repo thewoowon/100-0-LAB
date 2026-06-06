@@ -6,6 +6,7 @@ import Image from "next/image";
 import { api, VideoFeedItem, VideoFeedResponse } from "@/lib/api";
 import SplashScreen from "@/components/SplashScreen";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
+import { useRecentPayouts, timeAgo } from "@/lib/useRecentPayouts";
 
 const PLACEHOLDERS = [
   "흰색 차가 신호등을 들이받는 영상",
@@ -173,6 +174,7 @@ export default function HomePage() {
 
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const recentPayouts = useRecentPayouts();
 
   // 이미 본 적 있으면 마운트 직후 스플래시 스킵
   useEffect(() => {
@@ -381,6 +383,25 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── 최근 지급 배너 ── */}
+          {recentPayouts.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              {recentPayouts.map((p, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
+                  style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                >
+                  <span style={{ color: "#10b981" }}>✓</span>
+                  <span style={{ color: "var(--text)" }}>{p.region}</span>
+                  <span style={{ color: "var(--text-muted)" }}>·</span>
+                  <span style={{ color: "var(--text)", fontWeight: 600 }}>{p.amount.toLocaleString()}원</span>
+                  <span style={{ color: "var(--text-muted)" }}>{timeAgo(p.paid_at)}</span>
+                </div>
+              ))}
             </div>
           )}
 
