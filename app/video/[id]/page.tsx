@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import LoginRequiredModal from "@/components/LoginRequiredModal";
+import { useAuth } from "@/lib/useAuth";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -120,9 +121,13 @@ function PanelSection({
 
 export default function VideoPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { user: authUser } = useAuth();
+  const isAdmin = authUser?.role === "ADMIN" || authUser?.role === "SUPER_ADMIN";
 
   const [video, setVideo] = useState<VideoDetail | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [myVote, setMyVote] = useState<MyVote | null>(null);
   const [tags, setTags] = useState<TagListResponse | null>(null);
@@ -316,6 +321,18 @@ export default function VideoPage() {
     }
   }
 
+  async function handleAdminDelete() {
+    if (!confirm(`"${video?.title}" 영상을 삭제하시겠습니까?\n관련 투표, 댓글, 태그가 모두 삭제됩니다.`)) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/videos/admin/${id}`);
+      router.push("/");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "삭제 실패");
+      setDeleting(false);
+    }
+  }
+
   async function handleVerifyParty(commentId: number) {
     try {
       const updated = await api.post<CommentItem>(
@@ -434,12 +451,21 @@ export default function VideoPage() {
           )}
 
           {/* 제목 */}
-          <h1
-            className="text-xl font-semibold mb-2"
-            style={{ color: "var(--text)" }}
-          >
-            {video.title}
-          </h1>
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h1 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
+              {video.title}
+            </h1>
+            {isAdmin && (
+              <button
+                onClick={handleAdminDelete}
+                disabled={deleting}
+                className="shrink-0 px-3 py-1 text-xs font-medium rounded disabled:opacity-40 cursor-pointer"
+                style={{ background: "#ff4444", color: "#fff" }}
+              >
+                {deleting ? "삭제 중..." : "영상 삭제"}
+              </button>
+            )}
+          </div>
 
           {/* 메타 */}
           <div
